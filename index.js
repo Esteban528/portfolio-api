@@ -169,7 +169,7 @@ app.get('/posts', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(dbConfig);
-    const [posts] = await connection.query('SELECT * FROM posts');
+    const [posts] = await connection.query('SELECT * FROM posts ORDER by id DESC');
     cachedPosts = posts;
     res.json(posts);
   } catch (err) {
