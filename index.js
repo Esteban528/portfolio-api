@@ -6,6 +6,7 @@ const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const webhookUrl = process.env.WEBHOOK_URL;
 
 app.use(cors());
 app.use(express.json());
@@ -195,7 +196,16 @@ app.post('/posts', basicAuthMiddleware, async (req, res) => {
       [title, date, content, description]
     );
 
-    cachedPosts = null; 
+    cachedPosts = null;
+
+
+    sendDiscordEmbed({
+      title: title,
+      url: `https://estebandev.xyz/blog/${result.insertId}`,
+      description: description,
+      color: 0x2B4F7D,
+      footerText: "estebandev.xyz/blog",
+    });
 
     res.status(201).json({ message: 'Post created', id: result.insertId });
   } catch (err) {
@@ -213,3 +223,46 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is listening on http://localhost:${port}`);
 });
+
+
+function sendDiscordEmbed(embedOptions = {}) {
+  const embed = {
+    title: embedOptions.title || "Embed Title",
+    description: embedOptions.description || "Embed description",
+    url: embedOptions.url || undefined,
+    color: embedOptions.color || 0x00bfff,
+    fields: embedOptions.fields || [],
+    footer: {
+      text: embedOptions.footerText || "Footer text",
+      icon_url: embedOptions.footerIcon || "https://i.imgur.com/AfFp7pu.png"
+    },
+    timestamp: new Date().toISOString()
+  };
+
+  const payload = {
+    username: embedOptions.username || "estebandev.xyz",
+    content: "Una nueva publicación se ha subido en https://estebandev.xyz/blog \n||@here||",
+    avatar_url: embedOptions.avatarUrl || "https://i.imgur.com/AfFp7pu.png",
+    embeds: [embed]
+  };
+
+  fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to send embed. HTTP status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(data => {
+      console.log("Embed successfully sent.");
+    })
+    .catch(error => {
+      console.error("An error occurred while sending the embed:", error);
+    });
+}
