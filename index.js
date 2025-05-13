@@ -201,7 +201,7 @@ app.post('/posts', basicAuthMiddleware, async (req, res) => {
 
     sendDiscordEmbed({
       title: title,
-      url: `https://estebandev.xyz/blog/${result.insertId}`,
+      url: `https://estebandev.xyz/blog/posts/${result.insertId}`,
       description: description,
       color: 0x2B4F7D,
       footerText: "estebandev.xyz/blog",
